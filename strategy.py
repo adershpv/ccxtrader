@@ -1,5 +1,5 @@
 from ta.momentum import StochRSIIndicator
-from ta.trend import ema_indicator
+from ta.trend import ema_indicator, sma_indicator, macd, macd_signal
 from ta.volatility import average_true_range
 from ta.volume import volume_weighted_average_price
 
@@ -14,6 +14,8 @@ class Strategy:
     def __init__(self, df):
         self.df = df
         self.current = df.iloc[-1]
+        self.close_price = self.current[CLOSE_INDEX]
+        print("Close Price", self.close_price)
 
         self.stoch_rsi_k = None
         self.stoch_rsi_d = None
@@ -24,6 +26,10 @@ class Strategy:
         self.medium_ema = None
         self.slow_ema = None
 
+        self.trend_sma = None
+        self.macd_line = None
+        self.signal_line = None
+
         self.atr = None
         self.vwap = None
 
@@ -33,10 +39,10 @@ class Strategy:
         self.stoch_rsi_d = rsi.stochrsi_d().iloc[-1] * 100
         print("Stoch RSI", self.stoch_rsi_k, self.stoch_rsi_d)
 
-        prev_rsi = StochRSIIndicator(self.df[:-1]['close'], 14, 3, 3)
-        self.stoch_rsi_prev_k = prev_rsi.stochrsi_k().iloc[-1] * 100
-        self.stoch_rsi_prev_d = prev_rsi.stochrsi_d().iloc[-1] * 100
-        print("Previous Stoch RSI", self.stoch_rsi_prev_k, self.stoch_rsi_prev_d)
+        # prev_rsi = StochRSIIndicator(self.df[:-1]['close'], 14, 3, 3)
+        # self.stoch_rsi_prev_k = prev_rsi.stochrsi_k().iloc[-1] * 100
+        # self.stoch_rsi_prev_d = prev_rsi.stochrsi_d().iloc[-1] * 100
+        # print("Previous Stoch RSI", self.stoch_rsi_prev_k, self.stoch_rsi_prev_d)
 
     def _get_ema(self):
         self.fast_ema = ema_indicator(
@@ -46,6 +52,16 @@ class Strategy:
         self.slow_ema = ema_indicator(
             self.df['close'], SLOW_EMA_PERIOD).iloc[-1]
         print("EMA", self.fast_ema, self.medium_ema, self.slow_ema)
+
+    def _get_trend_sma(self):
+        self.trend_sma = sma_indicator(
+            self.df['close'], TREND_SMA_PERIOD).iloc[-1]
+        print("SMA", self.trend_sma)
+
+    def _get_macd(self):
+        self.macd_line = macd(self.df['close']).iloc[-1]
+        self.signal_line = macd_signal(self.df['close']).iloc[-1]
+        print("MACD", self.macd_line, self.signal_line)
 
     def _get_atr(self):
         atr = average_true_range(
@@ -66,59 +82,37 @@ class Strategy:
         print("VWAP", self.vwap)
 
     def _get_indicator_values(self):
+        self._get_trend_sma()
+        self._get_macd()
         self._get_stoch_rsi()
-        self._get_ema()
         self._get_atr()
-        self._get_vwap()
+        # self._get_vwap()
+        # self._get_ema()
 
     def _bullish(self):
-        if STRATEGY == RSI_CROSSING_STRATEGY:
+        if STRATEGY == SMA_MACD_RSI_STRATEGY:
             return all([
-                self.stoch_rsi_k < 50,
-                self.stoch_rsi_k > self.stoch_rsi_d,
-                self.stoch_rsi_prev_k <= self.stoch_rsi_prev_d
+                self.close_price > self.trend_sma,
+                self.macd_line > self.signal_line,
+                self.stoch_rsi_k > self.stoch_rsi_d
             ])
-        elif STRATEGY == EMA_RSI_STRATEGY:
-            return all([
-                self.stoch_rsi_k < 30,
-                self.stoch_rsi_k > self.stoch_rsi_d,
-                self.fast_ema > self.medium_ema,
-                self.medium_ema > self.slow_ema
-            ])
-        elif STRATEGY == EMA_CROSSING_STRATEGY:
-            return self.fast_ema > self.medium_ema
         return False
 
     def _bearish(self):
-        if STRATEGY == RSI_CROSSING_STRATEGY:
+        if STRATEGY == SMA_MACD_RSI_STRATEGY:
             return all([
-                self.stoch_rsi_k > 50,
-                self.stoch_rsi_k < self.stoch_rsi_d,
-                self.stoch_rsi_prev_k >= self.stoch_rsi_prev_d
+                self.close_price < self.trend_sma,
+                self.macd_line < self.signal_line,
+                self.stoch_rsi_k < self.stoch_rsi_d
             ])
-        elif STRATEGY == EMA_RSI_STRATEGY:
-            return all([
-                self.stoch_rsi_k > 70,
-                self.stoch_rsi_k < self.stoch_rsi_d,
-                self.fast_ema < self.medium_ema,
-                self.medium_ema < self.slow_ema
-            ])
-        elif STRATEGY == EMA_CROSSING_STRATEGY:
-            return self.fast_ema < self.medium_ema
         return False
 
-    def _get_stop_loss_margin(self, side):
-        is_against_trend = (
-            side == SIDE_BUY and self.fast_ema < self.slow_ema) or (
-            side == SIDE_SELL and self.fast_ema > self.slow_ema)
-        if is_against_trend:
-            return MIN_TAKE_PROFIT_MARGIN * self.atr, MIN_STOP_LOSS_MARGIN * self.atr
-        else:
-            return MAX_TAKE_PROFIT_MARGIN * self.atr, MAX_STOP_LOSS_MARGIN * self.atr
+    def _get_stop_loss_margin(self):
+        return MAX_TAKE_PROFIT_MARGIN * self.atr, MAX_STOP_LOSS_MARGIN * self.atr
 
     def _get_stop_limits(self, side):
-        price = self.current[CLOSE_INDEX]
-        tp_diff, sl_diff = self._get_stop_loss_margin(side)
+        price = self.close_price
+        tp_diff, sl_diff = self._get_stop_loss_margin()
         if side == SIDE_BUY:
             tp = price + tp_diff
             sl = price - sl_diff
