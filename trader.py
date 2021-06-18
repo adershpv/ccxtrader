@@ -74,8 +74,6 @@ def trade(exchange, side, p, tp, sl):
                 set_stop_limits(exchange, SIDE_SELL, tp, sl)
                 print(
                     f"{SYMBOL} Updated Stop Limits (LONG)\nTake Profit: {tp}\nStop Loss: {sl}")
-                send_message(
-                    f"{SYMBOL} Updated Stop Limits (LONG)\nTake Profit: {tp}\nStop Loss: {sl}")
             except Exception as e:
                 print(e, "\n")
                 send_message(f"Unable to update stop limits.\n{e}")
@@ -89,8 +87,6 @@ def trade(exchange, side, p, tp, sl):
                 exchange.cancel_all_orders(SYMBOL)
                 set_stop_limits(exchange, SIDE_BUY, tp, sl)
                 print(
-                    f"{SYMBOL} Updated Stop Limits (SHORT)\nTake Profit: {tp}\nStop Loss: {sl}")
-                send_message(
                     f"{SYMBOL} Updated Stop Limits (SHORT)\nTake Profit: {tp}\nStop Loss: {sl}")
             except Exception as e:
                 print(e, "\n")
