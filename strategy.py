@@ -82,7 +82,7 @@ class Strategy:
         print("VWAP", self.vwap)
 
     def _get_indicator_values(self):
-        self._get_trend_sma()
+        # self._get_trend_sma()
         self._get_macd()
         self._get_stoch_rsi()
         self._get_atr()
@@ -90,20 +90,20 @@ class Strategy:
         # self._get_ema()
 
     def _bullish(self):
-        if STRATEGY == SMA_MACD_RSI_STRATEGY:
+        if STRATEGY == MACD_STOCH_RSI_STRATEGY:
             return all([
-                self.close_price > self.trend_sma,
                 self.macd_line > self.signal_line,
-                self.stoch_rsi_k > self.stoch_rsi_d
+                self.stoch_rsi_k > self.stoch_rsi_d,
+                self.macd_line < MAX_MACD_RANGE
             ])
         return False
 
     def _bearish(self):
-        if STRATEGY == SMA_MACD_RSI_STRATEGY:
+        if STRATEGY == MACD_STOCH_RSI_STRATEGY:
             return all([
-                self.close_price < self.trend_sma,
                 self.macd_line < self.signal_line,
-                self.stoch_rsi_k < self.stoch_rsi_d
+                self.stoch_rsi_k < self.stoch_rsi_d,
+                self.macd_line > MIN_MACD_RANGE
             ])
         return False
 
