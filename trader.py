@@ -78,7 +78,7 @@ def trade(exchange, side, p, tp, sl):
         if posAmt > 0:
             try:
                 print("Already in a LONG position.")
-                if ENABLE_TRILING_STOP_LOSS:
+                if ENABLE_TRAILING_STOP_LOSS:
                     exchange.cancel_all_orders(SYMBOL)
                     set_stop_limits(exchange, posAmt, SIDE_SELL, tp, sl)
                     print(
@@ -93,7 +93,7 @@ def trade(exchange, side, p, tp, sl):
         if posAmt < 0:
             try:
                 print("Already in a SHORT position.")
-                if ENABLE_TRILING_STOP_LOSS:
+                if ENABLE_TRAILING_STOP_LOSS:
                     exchange.cancel_all_orders(SYMBOL)
                     set_stop_limits(exchange, abs(posAmt), SIDE_BUY, tp, sl)
                     print(

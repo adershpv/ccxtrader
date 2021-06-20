@@ -29,6 +29,8 @@ class Strategy:
         self.trend_sma = None
         self.macd_line = None
         self.signal_line = None
+        self.macd_prev_line = None
+        self.signal_prev_line = None
 
         self.atr = None
         self.vwap = None
@@ -62,6 +64,9 @@ class Strategy:
         self.macd_line = macd(self.df['close']).iloc[-1]
         self.signal_line = macd_signal(self.df['close']).iloc[-1]
         print("MACD", self.macd_line, self.signal_line)
+        self.macd_prev_line = macd(self.df[:-1]['close']).iloc[-1]
+        self.signal_prev_line = macd_signal(self.df[:-1]['close']).iloc[-1]
+        print("Previous MACD", self.macd_prev_line, self.signal_prev_line)
 
     def _get_atr(self):
         atr = average_true_range(
@@ -82,7 +87,7 @@ class Strategy:
         print("VWAP", self.vwap)
 
     def _get_indicator_values(self):
-        # self._get_trend_sma()
+        self._get_trend_sma()
         self._get_macd()
         self._get_stoch_rsi()
         self._get_atr()
@@ -90,20 +95,22 @@ class Strategy:
         # self._get_ema()
 
     def _bullish(self):
-        if STRATEGY == MACD_STOCH_RSI_STRATEGY:
+        if STRATEGY == MACD_CROSSOVER_STRATEGY:
             return all([
-                self.macd_line > self.signal_line,
+                self.close_price > self.trend_sma,
                 self.stoch_rsi_k > self.stoch_rsi_d,
-                self.macd_line < MAX_MACD_RANGE
+                self.macd_line > self.signal_line,
+                self.macd_prev_line <= self.signal_prev_line
             ])
         return False
 
     def _bearish(self):
-        if STRATEGY == MACD_STOCH_RSI_STRATEGY:
+        if STRATEGY == MACD_CROSSOVER_STRATEGY:
             return all([
-                self.macd_line < self.signal_line,
+                self.close_price < self.trend_sma,
                 self.stoch_rsi_k < self.stoch_rsi_d,
-                self.macd_line > MIN_MACD_RANGE
+                self.macd_line < self.signal_line,
+                self.macd_prev_line >= self.signal_prev_line
             ])
         return False
 
