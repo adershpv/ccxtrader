@@ -21,17 +21,23 @@ def get_balance(exchange):
 
 def notify_order_details(side, balance, amount, p, tp, sl):
     order_type = 'Bought (LONG)' if side == SIDE_BUY else 'Sold (SHORT)'
-    message = f"Balance: {CURRENCY} {balance}\n\n{SYMBOL} {order_type}\nAmount: {amount}\nPrice: {p}\nTake Profit: {tp}\nStop Loss: {sl}"
+    message = f"Balance: {CURRENCY} {balance}\n\n{SYMBOL} {order_type}\nAmount: {amount}\nPrice: {p}"
+    if ENABLE_TAKE_PROFIT:
+        message += f"\nTake Profit: {tp}"
+    if ENABLE_STOP_LOSS:
+        message += f"\nStop Loss: {sl}"
     print(message)
     send_message(message)
 
 
 def set_stop_limits(exchange, amount, side, tp, sl):
-    params["stopPrice"] = tp
-    exchange.create_order(SYMBOL, TAKE_PROFIT_MARKET,
-                          side, amount, params=params)
-    params["stopPrice"] = sl
-    exchange.create_order(SYMBOL, STOP_MARKET, side, amount, params=params)
+    if ENABLE_TAKE_PROFIT:
+        params["stopPrice"] = tp
+        exchange.create_order(SYMBOL, TAKE_PROFIT_MARKET,
+                              side, amount, params=params)
+    if ENABLE_STOP_LOSS:
+        params["stopPrice"] = sl
+        exchange.create_order(SYMBOL, STOP_MARKET, side, amount, params=params)
 
 
 def buy(exchange, posAmt, p, tp, sl):

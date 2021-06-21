@@ -1,5 +1,5 @@
 from ta.momentum import StochRSIIndicator
-from ta.trend import ema_indicator, sma_indicator, macd, macd_signal
+from ta.trend import ema_indicator, sma_indicator, macd, macd_signal, PSARIndicator
 from ta.volatility import average_true_range
 from ta.volume import volume_weighted_average_price
 
@@ -31,6 +31,7 @@ class Strategy:
         self.signal_line = None
         self.macd_prev_line = None
         self.signal_prev_line = None
+        self.par_sar = None
 
         self.atr = None
         self.vwap = None
@@ -60,6 +61,12 @@ class Strategy:
             self.df['close'], TREND_SMA_PERIOD).iloc[-1]
         print("SMA", self.trend_sma)
 
+    def _get_par_sar(self):
+        psari = PSARIndicator(
+            self.df['high'], self.df['low'], self.df['close'])
+        self.par_sar = psari.psar().iloc[-1]
+        print("Parabolic SAR", self.par_sar)
+
     def _get_macd(self):
         self.macd_line = macd(self.df['close']).iloc[-1]
         self.signal_line = macd_signal(self.df['close']).iloc[-1]
@@ -87,9 +94,10 @@ class Strategy:
         print("VWAP", self.vwap)
 
     def _get_indicator_values(self):
+        self._get_par_sar()
         self._get_trend_sma()
-        self._get_macd()
-        self._get_stoch_rsi()
+        # self._get_macd()
+        # self._get_stoch_rsi()
         self._get_atr()
         # self._get_vwap()
         # self._get_ema()
@@ -102,6 +110,11 @@ class Strategy:
                 self.macd_line > self.signal_line,
                 self.macd_prev_line <= self.signal_prev_line
             ])
+        if STRATEGY == PARABOLIC_SAR_STRATEGY:
+            return all([
+                self.close_price > self.trend_sma,
+                self.close_price > self.par_sar
+            ])
         return False
 
     def _bearish(self):
@@ -111,6 +124,11 @@ class Strategy:
                 self.stoch_rsi_k < self.stoch_rsi_d,
                 self.macd_line < self.signal_line,
                 self.macd_prev_line >= self.signal_prev_line
+            ])
+        if STRATEGY == PARABOLIC_SAR_STRATEGY:
+            return all([
+                self.close_price < self.trend_sma,
+                self.close_price < self.par_sar
             ])
         return False
 
