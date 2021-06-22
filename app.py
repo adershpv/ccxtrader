@@ -18,7 +18,7 @@ exchange = ccxt.binanceusdm({
 })
 
 
-bars = exchange.fetch_ohlcv(SYMBOL, timeframe=TIME_FRAME, limit=210)
+bars = exchange.fetch_ohlcv(SYMBOL, timeframe=TIME_FRAME, limit=60)
 df = pd.DataFrame(bars[:-1], columns=COLUMNS)
 
 strategy = Strategy(df)

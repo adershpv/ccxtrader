@@ -59,39 +59,49 @@ class Strategy:
 
     def _get_indicator_values(self):
         # self._get_par_sar()
-        self._get_trend_sma()
-        # self._get_macd()
+        # self._get_trend_sma()
+        self._get_macd()
         self._get_stoch_rsi()
         self._get_atr()
         # self._get_vwap()
-        self._get_ema()
+        # self._get_ema()
         self.current = self.df.iloc[-1]
         self.prev = self.df.iloc[-2]
         print(self.current)
 
     def _bullish(self):
-        if all([
-            self.current["medium_ema"] > self.prev["medium_ema"],
-            self.current["medium_ema"] <= self.prev["medium_ema"],
-            self.current["fast_ema"] > self.prev["medium_ema"],
-            self.current["slow_ema"] > self.prev["trend_sma"],
-            self.current["rsi_k"] > self.current["rsi_d"],
-            self.current["rsi_k"] < MAX_STOCH_RSI
-        ]):
-            return True
-        return False
+        if STRATEGY == MACD_CROSSOVER_STRATEGY:
+            return all([
+                self.current["macd_line"] > self.current["signal_line"],
+                self.prev["macd_line"] <= self.prev["signal_line"],
+                self.current["rsi_k"] > self.current["rsi_d"]
+            ])
+        else:
+            return all([
+                self.current["medium_ema"] > self.prev["medium_ema"],
+                self.current["medium_ema"] <= self.prev["medium_ema"],
+                self.current["fast_ema"] > self.prev["medium_ema"],
+                self.current["slow_ema"] > self.prev["trend_sma"],
+                self.current["rsi_k"] > self.current["rsi_d"],
+                self.current["rsi_k"] < MAX_STOCH_RSI
+            ])
 
     def _bearish(self):
-        if all([
-            self.current["medium_ema"] < self.prev["medium_ema"],
-            self.current["medium_ema"] >= self.prev["medium_ema"],
-            self.current["fast_ema"] < self.prev["medium_ema"],
-            self.current["slow_ema"] < self.prev["trend_sma"],
-            self.current["rsi_k"] < self.current["rsi_d"],
-            self.current["rsi_k"] > MIN_STOCH_RSI
-        ]):
-            return True
-        return False
+        if STRATEGY == MACD_CROSSOVER_STRATEGY:
+            return all([
+                self.current["macd_line"] < self.current["signal_line"],
+                self.prev["macd_line"] >= self.prev["signal_line"],
+                self.current["rsi_k"] < self.current["rsi_d"]
+            ])
+        else:
+            return all([
+                self.current["medium_ema"] < self.prev["medium_ema"],
+                self.current["medium_ema"] >= self.prev["medium_ema"],
+                self.current["fast_ema"] < self.prev["medium_ema"],
+                self.current["slow_ema"] < self.prev["trend_sma"],
+                self.current["rsi_k"] < self.current["rsi_d"],
+                self.current["rsi_k"] > MIN_STOCH_RSI
+            ])
 
     def _get_stop_loss_margin(self):
         return MAX_TAKE_PROFIT_MARGIN * self.current["atr"], MAX_STOP_LOSS_MARGIN * self.current["atr"]
