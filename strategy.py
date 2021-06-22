@@ -1,5 +1,5 @@
 from ta.momentum import StochRSIIndicator
-from ta.trend import ema_indicator, sma_indicator, macd, macd_signal, PSARIndicator
+from ta.trend import ema_indicator, sma_indicator, macd, macd_signal, macd_diff, PSARIndicator
 from ta.volatility import average_true_range
 from ta.volume import volume_weighted_average_price
 
@@ -42,6 +42,7 @@ class Strategy:
     def _get_macd(self):
         self.df["macd_line"] = macd(self.df['close'])
         self.df["signal_line"] = macd_signal(self.df['close'])
+        self.df["macd_diff"] = macd_diff(self.df['close'])
 
     def _get_atr(self):
         self.df["atr"] = average_true_range(
@@ -74,6 +75,7 @@ class Strategy:
             return all([
                 self.current["macd_line"] > self.current["signal_line"],
                 self.prev["macd_line"] <= self.prev["signal_line"],
+                self.current["macd_diff"] > MIN_MACD_DIFF,
                 self.current["rsi_k"] > self.current["rsi_d"]
             ])
         else:
@@ -91,6 +93,7 @@ class Strategy:
             return all([
                 self.current["macd_line"] < self.current["signal_line"],
                 self.prev["macd_line"] >= self.prev["signal_line"],
+                self.current["macd_diff"] < (-1 * MIN_MACD_DIFF),
                 self.current["rsi_k"] < self.current["rsi_d"]
             ])
         else:
