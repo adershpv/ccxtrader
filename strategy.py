@@ -15,6 +15,9 @@ class Strategy:
         self.df = df
         self.current = df.iloc[-1]
         self.close_price = self.current[CLOSE_INDEX]
+        self.lastRows = self.df.tail(7)
+        self.maxValueIndex = self.lastRows.idxmax()
+        self.minValueIndex = self.lastRows.idxmin()
         print("Close Price", self.close_price)
 
     def _get_stoch_rsi(self):
@@ -87,7 +90,7 @@ class Strategy:
                 self.current["macd_diff"] > MIN_MACD_DIFF,
                 self.current["rsi_k"] > self.current["rsi_d"]
             ])
-        else:
+        elif STRATEGY == EMA_CROSSOVER_STRATEGY:
             fast_crossover_slow = all([
                 self.current["fast_ema"] > self.current["slow_ema"],
                 self.prev["fast_ema"] <= self.prev["slow_ema"]
@@ -104,6 +107,8 @@ class Strategy:
             if fast_crossover_medium:
                 print(f"EMA {FAST_EMA_PERIOD} crossover {MEDIUM_EMA_PERIOD}")
                 return True
+        elif self.current["fast_ema"] > self.current["medium_ema"] and self.minValueIndex[CLOSE_INDEX] == LIMIT - 2:
+            return True
 
         return False
 
@@ -115,7 +120,7 @@ class Strategy:
                 self.current["macd_diff"] < (-1 * MIN_MACD_DIFF),
                 self.current["rsi_k"] < self.current["rsi_d"]
             ])
-        else:
+        elif STRATEGY == EMA_CROSSOVER_STRATEGY:
             fast_crossunder_slow = all([
                 self.current["fast_ema"] < self.current["slow_ema"],
                 self.prev["fast_ema"] >= self.prev["slow_ema"]
@@ -132,6 +137,8 @@ class Strategy:
             if fast_crossunder_medium:
                 print(f"EMA {FAST_EMA_PERIOD} crossunder {MEDIUM_EMA_PERIOD}")
                 return True
+        elif self.current["fast_ema"] < self.current["medium_ema"] and self.maxValueIndex[CLOSE_INDEX] == LIMIT - 2:
+            return True
 
         return False
 
