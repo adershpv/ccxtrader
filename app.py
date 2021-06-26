@@ -26,5 +26,5 @@ side, p, tp, sl = strategy.analyse()
 
 print(side, p, tp, sl)
 
-if side == SIDE_BUY or side == SIDE_SELL:
+if side != HOLD:
     trade(exchange, side, p, tp, sl)

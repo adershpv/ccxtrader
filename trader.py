@@ -42,9 +42,7 @@ def set_stop_limits(exchange, amount, side, tp, sl):
 
 def buy(exchange, posAmt, p, tp, sl):
     try:
-        if posAmt < 0:
-            print("Cancelling current SHORT position.")
-            exchange.create_market_buy_order(SYMBOL, abs(posAmt))
+        close(exchange, posAmt)
 
         balance = get_balance(exchange)
         amount = round(balance * MARGIN / p)
@@ -60,9 +58,7 @@ def buy(exchange, posAmt, p, tp, sl):
 
 def sell(exchange, posAmt, p, tp, sl):
     try:
-        if posAmt > 0:
-            print("Cancelling current LONG position.")
-            exchange.create_market_sell_order(SYMBOL, posAmt)
+        close(exchange, posAmt)
 
         balance = get_balance(exchange)
         amount = round(balance * MARGIN / p)
@@ -74,6 +70,15 @@ def sell(exchange, posAmt, p, tp, sl):
     except Exception as e:
         print(e, "\n")
         send_message(f"Unable to place order.\n{e}")
+
+
+def close(exchange, posAmt):
+    if posAmt > 0:
+        print("Cancelling current LONG position.")
+        exchange.create_market_sell_order(SYMBOL, posAmt)
+    elif posAmt < 0:
+        print("Cancelling current SHORT position.")
+        exchange.create_market_buy_order(SYMBOL, abs(posAmt))
 
 
 def trade(exchange, side, p, tp, sl):
@@ -95,7 +100,7 @@ def trade(exchange, side, p, tp, sl):
         else:
             buy(exchange, posAmt, p, tp, sl)
 
-    if side == SIDE_SELL:
+    elif side == SIDE_SELL:
         if posAmt < 0:
             try:
                 print("Already in a SHORT position.")
@@ -109,3 +114,14 @@ def trade(exchange, side, p, tp, sl):
                 send_message(f"Unable to update stop limits.\n{e}")
         else:
             sell(exchange, posAmt, p, tp, sl)
+
+    elif posAmt != 0 and (side == CLOSE_LONG or side == CLOSE_SHORT):
+        try:
+            close(exchange, posAmt)
+            balance = get_balance(exchange)
+            message = f"{CLOSE_MESSAGE[side]}\nBalance: {CURRENCY} {balance}"
+            print(message)
+            send_message(message)
+        except Exception as e:
+            print(e, "\n")
+            send_message(f"Unable to close current position.\n{e}")

@@ -15,7 +15,7 @@ class Strategy:
         self.df = df
         self.current = df.iloc[-1]
         self.close_price = self.current[CLOSE_INDEX]
-        self.lastRows = self.df.tail(7)
+        self.lastRows = self.df.tail(LAST_N_ROWS)
         self.maxValueIndex = self.lastRows.idxmax()
         self.minValueIndex = self.lastRows.idxmin()
         print("Close Price", self.close_price)
@@ -71,7 +71,6 @@ class Strategy:
         self._get_ema()
         self.current = self.df.iloc[-1]
         self.prev = self.df.iloc[-2]
-        self._print_emas()
 
     def _print_emas(self):
         print("EMA\t\tCurrent\t\t\tPrevious")
@@ -82,65 +81,20 @@ class Strategy:
         print(
             f"{SLOW_EMA_PERIOD}\t {self.current['slow_ema']}\t{self.prev['slow_ema']}")
 
-    def _bullish(self):
-        if STRATEGY == MACD_CROSSOVER_STRATEGY:
-            return all([
-                self.current["macd_line"] > self.current["signal_line"],
-                self.prev["macd_line"] <= self.prev["signal_line"],
-                self.current["macd_diff"] > MIN_MACD_DIFF,
-                self.current["rsi_k"] > self.current["rsi_d"]
-            ])
-        elif STRATEGY == EMA_CROSSOVER_STRATEGY:
-            fast_crossover_slow = all([
-                self.current["fast_ema"] > self.current["slow_ema"],
-                self.prev["fast_ema"] <= self.prev["slow_ema"]
-            ])
-            if fast_crossover_slow:
-                print(f"EMA {FAST_EMA_PERIOD} crossover {SLOW_EMA_PERIOD}")
-                return True
-
-            fast_crossover_medium = all([
-                self.current["fast_ema"] > self.current["medium_ema"],
-                self.prev["fast_ema"] <= self.prev["medium_ema"],
-                self.close_price > self.current["slow_ema"]
-            ])
-            if fast_crossover_medium:
-                print(f"EMA {FAST_EMA_PERIOD} crossover {MEDIUM_EMA_PERIOD}")
-                return True
-        elif self.current["fast_ema"] > self.current["medium_ema"] and self.minValueIndex[CLOSE_INDEX] == LIMIT - 2:
-            return True
-
-        return False
-
-    def _bearish(self):
-        if STRATEGY == MACD_CROSSOVER_STRATEGY:
-            return all([
-                self.current["macd_line"] < self.current["signal_line"],
-                self.prev["macd_line"] >= self.prev["signal_line"],
-                self.current["macd_diff"] < (-1 * MIN_MACD_DIFF),
-                self.current["rsi_k"] < self.current["rsi_d"]
-            ])
-        elif STRATEGY == EMA_CROSSOVER_STRATEGY:
-            fast_crossunder_slow = all([
-                self.current["fast_ema"] < self.current["slow_ema"],
-                self.prev["fast_ema"] >= self.prev["slow_ema"]
-            ])
-            if fast_crossunder_slow:
-                print(f"EMA {FAST_EMA_PERIOD} crossunder {SLOW_EMA_PERIOD}")
-                return True
-
-            fast_crossunder_medium = all([
-                self.current["fast_ema"] < self.current["medium_ema"],
-                self.prev["fast_ema"] >= self.prev["medium_ema"],
-                self.close_price < self.current["slow_ema"]
-            ])
-            if fast_crossunder_medium:
-                print(f"EMA {FAST_EMA_PERIOD} crossunder {MEDIUM_EMA_PERIOD}")
-                return True
-        elif self.current["fast_ema"] < self.current["medium_ema"] and self.maxValueIndex[CLOSE_INDEX] == LIMIT - 2:
-            return True
-
-        return False
+    def _get_trading_action(self):
+        action = HOLD
+        if STRATEGY == SEVEN_BAR_STRATEGY:
+            if self.minValueIndex[CLOSE_INDEX] == CURRENT_DF_INDEX:
+                if self.current["fast_ema"] > self.current["medium_ema"]:
+                    action = SIDE_BUY
+                else:
+                    action = CLOSE_SHORT
+            if self.maxValueIndex[CLOSE_INDEX] == CURRENT_DF_INDEX:
+                if self.current["fast_ema"] < self.current["medium_ema"]:
+                    action = SIDE_SELL
+                else:
+                    action = CLOSE_LONG
+        return action
 
     def _get_stop_loss_margin(self):
         return MAX_TAKE_PROFIT_MARGIN * self.current["atr"], MAX_STOP_LOSS_MARGIN * self.current["atr"]
@@ -158,11 +112,9 @@ class Strategy:
 
     def analyse(self):
         self._get_indicator_values()
-        if self._bullish():
-            p, tp, sl = self._get_stop_limits(SIDE_BUY)
-            return SIDE_BUY, p, tp, sl
-        elif self._bearish():
-            p, tp, sl = self._get_stop_limits(SIDE_SELL)
-            return SIDE_SELL, p, tp, sl
+        action = self._get_trading_action()
+        if action == SIDE_BUY or action == SIDE_SELL:
+            p, tp, sl = self._get_stop_limits(action)
         else:
-            return HOLD, "", "", ""
+            p = tp = sl = ''
+        return action, p, tp, sl
