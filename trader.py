@@ -115,7 +115,7 @@ def trade(exchange, side, p, tp, sl):
         else:
             sell(exchange, posAmt, p, tp, sl)
 
-    elif posAmt != 0 and (side == CLOSE_LONG or side == CLOSE_SHORT):
+    elif (posAmt > 0 and side == CLOSE_LONG) or (posAmt < 0 and side == CLOSE_SHORT):
         try:
             close(exchange, posAmt)
             balance = get_balance(exchange)

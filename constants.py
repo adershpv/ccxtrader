@@ -24,8 +24,8 @@ HOLD = 'HODL'
 CLOSE_INDEX = 4
 COLUMNS = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
 
-FAST_EMA_PERIOD = 13
-MEDIUM_EMA_PERIOD = 21
+FAST_EMA_PERIOD = 8
+MEDIUM_EMA_PERIOD = 10
 SLOW_EMA_PERIOD = 90
 
 MIN_MACD_DIFF = 0.0001
