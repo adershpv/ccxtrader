@@ -26,12 +26,12 @@ class Strategy:
         self.df["rsi_d"] = rsi.stochrsi_d() * 100
 
     def _get_ema(self):
-        self.df["fast_ema"] = rounded(ema_indicator(
-            self.df['close'], FAST_EMA_PERIOD))
-        self.df["medium_ema"] = rounded(ema_indicator(
-            self.df['close'], MEDIUM_EMA_PERIOD))
-        self.df["slow_ema"] = rounded(ema_indicator(
-            self.df['close'], SLOW_EMA_PERIOD))
+        self.df["fast_ema"] = ema_indicator(
+            self.df['close'], FAST_EMA_PERIOD)
+        self.df["medium_ema"] = ema_indicator(
+            self.df['close'], MEDIUM_EMA_PERIOD)
+        self.df["slow_ema"] = ema_indicator(
+            self.df['close'], SLOW_EMA_PERIOD)
 
     def _get_trend_sma(self):
         self.df["trend_sma"] = sma_indicator(
@@ -101,7 +101,7 @@ class Strategy:
         return MAX_TAKE_PROFIT_MARGIN * self.current["atr"], MAX_STOP_LOSS_MARGIN * self.current["atr"]
 
     def _get_stop_limits(self, side):
-        price = rounded(self.close_price)
+        price = self.close_price
         tp_diff, sl_diff = self._get_stop_loss_margin()
         if side == SIDE_BUY:
             tp = price + tp_diff
@@ -109,7 +109,7 @@ class Strategy:
         else:
             tp = price - tp_diff
             sl = price + sl_diff
-        return price, rounded(tp), rounded(sl)
+        return rounded(price), rounded(tp), rounded(sl)
 
     def analyse(self):
         self._get_indicator_values()
