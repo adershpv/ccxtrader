@@ -19,6 +19,13 @@ def get_balance(exchange):
     return rounded(balance[CURRENCY])
 
 
+def get_amount(balance, p):
+    amount = round(balance * MARGIN / p)
+    if amount > MAX_AMOUNT:
+        return MAX_AMOUNT
+    return amount
+
+
 def notify_order_details(side, balance, amount, p, tp, sl):
     order_type = 'Bought (LONG)' if side == SIDE_BUY else 'Sold (SHORT)'
     message = f"Balance: {CURRENCY} {balance}\n\n{SYMBOL} {order_type}\nAmount: {amount}\nPrice: {p}"
@@ -45,7 +52,7 @@ def buy(exchange, posAmt, p, tp, sl):
         close(exchange, posAmt)
 
         balance = get_balance(exchange)
-        amount = round(balance * MARGIN / p)
+        amount = get_amount(balance, p)
 
         exchange.cancel_all_orders(SYMBOL)
         exchange.create_market_buy_order(SYMBOL, amount)
@@ -61,7 +68,7 @@ def sell(exchange, posAmt, p, tp, sl):
         close(exchange, posAmt)
 
         balance = get_balance(exchange)
-        amount = round(balance * MARGIN / p)
+        amount = get_amount(balance, p)
 
         exchange.cancel_all_orders(SYMBOL)
         exchange.create_market_sell_order(SYMBOL, amount)
