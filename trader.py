@@ -10,8 +10,8 @@ params["workingType"] = MARK_PRICE
 params["timeInForce"] = GTE_GTC
 
 
-def rounded(num):
-    return round(num * 10000)/10000
+def rounded(num, decimal_places=PRICE_DECIMAL_PLACES):
+    return round(num, decimal_places)
 
 
 def get_balance(exchange):
@@ -20,7 +20,7 @@ def get_balance(exchange):
 
 
 def get_amount(balance, p):
-    amount = round(balance * MARGIN / p)
+    amount = rounded(balance * MARGIN / p, AMOUNT_DECIMAL_PLACES)
     if amount > MAX_AMOUNT:
         return MAX_AMOUNT
     return amount

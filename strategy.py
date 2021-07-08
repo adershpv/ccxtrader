@@ -6,36 +6,37 @@ from ta.volume import volume_weighted_average_price
 from constants import *
 
 
-def rounded(num):
-    return round(num * 10000)/10000
+def rounded(num, decimal_places=CALCULATION_DECIMAL_PLACES):
+    return round(num, decimal_places)
 
 
 class Strategy:
     def __init__(self, df):
         self.df = df
         self.current = df.iloc[-1]
+        self.prev = df.iloc[-2]
         self.close_price = self.current[CLOSE_INDEX]
         self.lastRows = self.df.tail(LAST_N_ROWS)
         self.maxValueIndex = self.lastRows.idxmax()
         self.minValueIndex = self.lastRows.idxmin()
-        print("Close Price", self.close_price)
+        print(f"Close Price\t{self.close_price}")
 
     def _get_stoch_rsi(self):
         rsi = StochRSIIndicator(self.df["close"], 14, 3, 3)
-        self.df["rsi_k"] = rsi.stochrsi_k() * 100
-        self.df["rsi_d"] = rsi.stochrsi_d() * 100
+        self.df["rsi_k"] = rounded(rsi.stochrsi_k() * 100)
+        self.df["rsi_d"] = rounded(rsi.stochrsi_d() * 100)
 
     def _get_ema(self):
-        self.df["fast_ema"] = ema_indicator(
-            self.df['close'], FAST_EMA_PERIOD)
-        self.df["medium_ema"] = ema_indicator(
-            self.df['close'], MEDIUM_EMA_PERIOD)
-        self.df["slow_ema"] = ema_indicator(
-            self.df['close'], SLOW_EMA_PERIOD)
+        self.df["fast_ema"] = rounded(ema_indicator(
+            self.df['close'], FAST_EMA_PERIOD))
+        self.df["medium_ema"] = rounded(ema_indicator(
+            self.df['close'], MEDIUM_EMA_PERIOD))
+        self.df["slow_ema"] = rounded(ema_indicator(
+            self.df['close'], SLOW_EMA_PERIOD))
 
     def _get_trend_sma(self):
-        self.df["trend_sma"] = sma_indicator(
-            self.df['close'], TREND_SMA_PERIOD)
+        self.df["trend_sma"] = rounded(sma_indicator(
+            self.df['close'], TREND_SMA_PERIOD))
 
     def _get_par_sar(self):
         psari = PSARIndicator(
@@ -48,10 +49,10 @@ class Strategy:
         self.df["macd_diff"] = macd_diff(self.df['close'])
 
     def _get_atr(self):
-        self.df["atr"] = average_true_range(
+        self.df["atr"] = rounded(average_true_range(
             self.df['high'],
             self.df['low'],
-            self.df['close'])
+            self.df['close']))
 
     def _get_vwap(self):
         self.df["vwap"] = volume_weighted_average_price(
@@ -65,7 +66,7 @@ class Strategy:
         # self._get_par_sar()
         # self._get_trend_sma()
         # self._get_macd()
-        # self._get_stoch_rsi()
+        self._get_stoch_rsi()
         self._get_atr()
         # self._get_vwap()
         self._get_ema()
@@ -95,6 +96,24 @@ class Strategy:
                     action = SIDE_SELL
                 else:
                     action = CLOSE_LONG
+        if STRATEGY == STOCH_RSI_STRATEGY:
+            print(f'EMA {SLOW_EMA_PERIOD}\t\t{self.current["slow_ema"]}')
+            print(
+                f'Stoch RSI\t{self.current["rsi_k"]}\t{self.current["rsi_d"]}')
+            if all([
+                self.close_price > self.current["slow_ema"],
+                self.current["rsi_d"] < MIN_STOCH_RSI,
+                self.current["rsi_k"] > self.current["rsi_d"],
+                self.current["rsi_k"] <= self.current["rsi_d"]
+            ]):
+                action = SIDE_BUY
+            if all([
+                self.close_price < self.current["slow_ema"],
+                self.current["rsi_d"] > MAX_STOCH_RSI,
+                self.current["rsi_k"] < self.current["rsi_d"],
+                self.current["rsi_k"] >= self.current["rsi_d"]
+            ]):
+                action = SIDE_SELL
         return action
 
     def _get_stop_loss_margin(self):
@@ -109,7 +128,7 @@ class Strategy:
         else:
             tp = price - tp_diff
             sl = price + sl_diff
-        return rounded(price), rounded(tp), rounded(sl)
+        return price, rounded(tp, PRICE_DECIMAL_PLACES), rounded(sl, PRICE_DECIMAL_PLACES)
 
     def analyse(self):
         self._get_indicator_values()
