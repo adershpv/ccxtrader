@@ -104,14 +104,14 @@ class Strategy:
                 self.close_price > self.current["slow_ema"],
                 self.current["rsi_d"] < MIN_STOCH_RSI,
                 self.current["rsi_k"] > self.current["rsi_d"],
-                self.current["rsi_k"] <= self.current["rsi_d"]
+                self.prev["rsi_k"] <= self.prev["rsi_d"]
             ]):
                 action = SIDE_BUY
             if all([
                 self.close_price < self.current["slow_ema"],
                 self.current["rsi_d"] > MAX_STOCH_RSI,
                 self.current["rsi_k"] < self.current["rsi_d"],
-                self.current["rsi_k"] >= self.current["rsi_d"]
+                self.prev["rsi_k"] >= self.prev["rsi_d"]
             ]):
                 action = SIDE_SELL
         return action
