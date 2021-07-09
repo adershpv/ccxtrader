@@ -1,4 +1,4 @@
-from ta.momentum import StochRSIIndicator
+from ta.momentum import StochRSIIndicator, rsi
 from ta.trend import ema_indicator, sma_indicator, macd, macd_signal, macd_diff, PSARIndicator
 from ta.volatility import average_true_range
 from ta.volume import volume_weighted_average_price
@@ -20,6 +20,9 @@ class Strategy:
         self.maxValueIndex = self.lastRows.idxmax()
         self.minValueIndex = self.lastRows.idxmin()
         print(f"Close Price\t{self.close_price}")
+
+    def _get_rsi(self):
+        self.df["rsi"] = rounded(rsi(self.df["close"], 14))
 
     def _get_stoch_rsi(self):
         rsi = StochRSIIndicator(self.df["close"], 14, 3, 3)
@@ -63,6 +66,7 @@ class Strategy:
         )
 
     def _get_indicator_values(self):
+        self._get_rsi()
         # self._get_par_sar()
         # self._get_trend_sma()
         # self._get_macd()
@@ -82,39 +86,26 @@ class Strategy:
         print(
             f"{SLOW_EMA_PERIOD}\t {self.current['slow_ema']}\t{self.prev['slow_ema']}")
 
+    def _crossover(self, key1, key2):
+        return self.current[key1] > self.current[key2] and self.prev[key1] <= self.prev[key2]
+
+    def _crossunder(self, key1, key2):
+        return self.current[key1] < self.current[key2] and self.prev[key1] >= self.prev[key2]
+
     def _get_trading_action(self):
         action = HOLD
-        if STRATEGY == SEVEN_BAR_STRATEGY:
-            print("EMA", self.current["fast_ema"], self.current["medium_ema"])
-            if self.minValueIndex[CLOSE_INDEX] == CURRENT_DF_INDEX:
-                if self.current["fast_ema"] > self.current["medium_ema"]:
-                    action = SIDE_BUY
-                else:
-                    action = CLOSE_SHORT
-            if self.maxValueIndex[CLOSE_INDEX] == CURRENT_DF_INDEX:
-                if self.current["fast_ema"] < self.current["medium_ema"]:
-                    action = SIDE_SELL
-                else:
-                    action = CLOSE_LONG
         if STRATEGY == STOCH_RSI_STRATEGY:
             print(f'EMA {SLOW_EMA_PERIOD}\t\t{self.current["slow_ema"]}')
+            print(f'RSI\t\t{self.current["rsi"]}')
             print(
                 f'Stoch RSI\t{self.current["rsi_k"]}\t{self.current["rsi_d"]}')
-            if all([
-                self.current["rsi_d"] < MIN_STOCH_RSI,
-                self.current["rsi_k"] > self.current["rsi_d"],
-                self.prev["rsi_k"] <= self.prev["rsi_d"]
-            ]):
-                if self.close_price > self.current["slow_ema"]:
+            if self._crossover("rsi_k", "rsi_d") and self.current["rsi_d"] < MIN_STOCH_RSI:
+                if self.close_price > self.current["slow_ema"] and self.current["rsi"] > 50:
                     action = SIDE_BUY
                 else:
                     action = CLOSE_SHORT
-            if all([
-                self.current["rsi_d"] > MAX_STOCH_RSI,
-                self.current["rsi_k"] < self.current["rsi_d"],
-                self.prev["rsi_k"] >= self.prev["rsi_d"]
-            ]):
-                if self.close_price < self.current["slow_ema"]:
+            if self._crossunder("rsi_k", "rsi_d") and self.current["rsi_d"] > MAX_STOCH_RSI:
+                if self.close_price < self.current["slow_ema"] and self.current["rsi"] < 50:
                     action = SIDE_SELL
                 else:
                     action = CLOSE_LONG
