@@ -101,19 +101,23 @@ class Strategy:
             print(
                 f'Stoch RSI\t{self.current["rsi_k"]}\t{self.current["rsi_d"]}')
             if all([
-                self.close_price > self.current["slow_ema"],
                 self.current["rsi_d"] < MIN_STOCH_RSI,
                 self.current["rsi_k"] > self.current["rsi_d"],
                 self.prev["rsi_k"] <= self.prev["rsi_d"]
             ]):
-                action = SIDE_BUY
+                if self.close_price > self.current["slow_ema"]:
+                    action = SIDE_BUY
+                else:
+                    action = CLOSE_SHORT
             if all([
-                self.close_price < self.current["slow_ema"],
                 self.current["rsi_d"] > MAX_STOCH_RSI,
                 self.current["rsi_k"] < self.current["rsi_d"],
                 self.prev["rsi_k"] >= self.prev["rsi_d"]
             ]):
-                action = SIDE_SELL
+                if self.close_price < self.current["slow_ema"]:
+                    action = SIDE_SELL
+                else:
+                    action = CLOSE_LONG
         return action
 
     def _get_stop_loss_margin(self):
