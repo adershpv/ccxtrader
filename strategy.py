@@ -99,15 +99,15 @@ class Strategy:
             print(f'RSI\t\t{self.current["rsi"]}')
             print(
                 f'Stoch RSI\t{self.current["rsi_k"]}\t{self.current["rsi_d"]}')
-            if self._crossover("rsi_k", "rsi_d") and self.current["rsi_d"] < MIN_STOCH_RSI:
-                if self.close_price > self.current["slow_ema"] and self.current["rsi"] > 50:
+            if self._crossover("rsi_k", "rsi_d"):
+                if self.close_price > self.current["slow_ema"] and self.current["rsi"] > MIN_RSI and self.current["rsi_d"] < MIN_STOCH_RSI:
                     action = SIDE_BUY
-                else:
+                elif self.current["rsi_d"] < MIN_STOCH_RSI_CLOSE:
                     action = CLOSE_SHORT
-            if self._crossunder("rsi_k", "rsi_d") and self.current["rsi_d"] > MAX_STOCH_RSI:
-                if self.close_price < self.current["slow_ema"] and self.current["rsi"] < 50:
+            if self._crossunder("rsi_k", "rsi_d"):
+                if self.close_price < self.current["slow_ema"] and self.current["rsi"] < MAX_RSI and self.current["rsi_d"] > MAX_STOCH_RSI:
                     action = SIDE_SELL
-                else:
+                elif self.current["rsi_d"] > MAX_STOCH_RSI_CLOSE:
                     action = CLOSE_LONG
         return action
 
