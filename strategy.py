@@ -32,10 +32,10 @@ class Strategy:
     def _get_ema(self):
         self.df["fast_ema"] = rounded(ema_indicator(
             self.df['close'], FAST_EMA_PERIOD))
-        self.df["medium_ema"] = rounded(ema_indicator(
-            self.df['close'], MEDIUM_EMA_PERIOD))
-        self.df["slow_ema"] = rounded(ema_indicator(
-            self.df['close'], SLOW_EMA_PERIOD))
+        # self.df["medium_ema"] = rounded(ema_indicator(
+        #     self.df['close'], MEDIUM_EMA_PERIOD))
+        # self.df["slow_ema"] = rounded(ema_indicator(
+        #     self.df['close'], SLOW_EMA_PERIOD))
 
     def _get_trend_sma(self):
         self.df["trend_sma"] = rounded(sma_indicator(
@@ -66,11 +66,11 @@ class Strategy:
         )
 
     def _get_indicator_values(self):
-        self._get_rsi()
+        # self._get_rsi()
         # self._get_par_sar()
         # self._get_trend_sma()
         # self._get_macd()
-        self._get_stoch_rsi()
+        # self._get_stoch_rsi()
         self._get_atr()
         # self._get_vwap()
         self._get_ema()
@@ -125,9 +125,21 @@ class Strategy:
             sl = price + sl_diff
         return price, rounded(tp, PRICE_DECIMAL_PLACES), rounded(sl, PRICE_DECIMAL_PLACES)
 
+    def _check_price_ema_cross(self):
+        action = HOLD
+        ema = self.current["fast_ema"]
+        open = self.current["open"]
+        close = self.current["close"]
+        if open <= ema and close > ema:
+            action = SIDE_BUY
+        if open >= ema and close < ema:
+            action = SIDE_SELL
+        return action
+
     def analyse(self):
         self._get_indicator_values()
-        action = self._get_trading_action()
+        action = self._check_price_ema_cross()
+        # action = self._get_trading_action()
         if action == SIDE_BUY or action == SIDE_SELL:
             p, tp, sl = self._get_stop_limits(action)
         else:
