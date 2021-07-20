@@ -174,7 +174,7 @@ class Strategy:
 
     def _three_prev_greens(self):
         df = self.df
-        return([
+        return all([
             df.iloc[-2]["close"] > df.iloc[-2]["open"],
             df.iloc[-3]["close"] > df.iloc[-3]["open"],
             df.iloc[-4]["close"] > df.iloc[-4]["open"]
@@ -182,7 +182,7 @@ class Strategy:
 
     def _three_prev_reds(self):
         df = self.df
-        return([
+        return all([
             df.iloc[-2]["close"] < df.iloc[-2]["open"],
             df.iloc[-3]["close"] < df.iloc[-3]["open"],
             df.iloc[-4]["close"] < df.iloc[-4]["open"]
