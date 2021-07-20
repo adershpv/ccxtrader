@@ -41,8 +41,12 @@ strategy = Strategy(df)
 # trade(exchange, side, p, tp, sl)
 # notify_action_details(side, tp, sl)
 
-cross = strategy.check_stoch_rsi_cross()
-if cross:
-    message = f"Stoch RSI cross {cross}"
-    print(message)
-    send_message(message)
+def notify_message(message):
+    if message:
+        print(message)
+        send_message(message)
+
+
+notify_message(strategy.check_stoch_rsi_cross())
+notify_message(strategy.check_engulfing_pattern())
+notify_message(strategy.check_three_line_strike())

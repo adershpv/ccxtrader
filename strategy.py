@@ -32,8 +32,8 @@ class Strategy:
     def _get_ema(self):
         self.df["fast_ema"] = rounded(ema_indicator(
             self.df['close'], FAST_EMA_PERIOD))
-        # self.df["medium_ema"] = rounded(ema_indicator(
-        #     self.df['close'], MEDIUM_EMA_PERIOD))
+        self.df["medium_ema"] = rounded(ema_indicator(
+            self.df['close'], MEDIUM_EMA_PERIOD))
         # self.df["slow_ema"] = rounded(ema_indicator(
         #     self.df['close'], SLOW_EMA_PERIOD))
 
@@ -74,6 +74,8 @@ class Strategy:
         # self._get_atr()
         # self._get_vwap()
         # self._get_ema()
+
+    def _update_current_prev_values(self):
         self.current = self.df.iloc[-1]
         self.prev = self.df.iloc[-2]
 
@@ -147,10 +149,60 @@ class Strategy:
         return action, p, tp, sl
 
     def check_stoch_rsi_cross(self):
-        self._get_indicator_values()
-        cross = ""
+        self._get_stoch_rsi()
+        self._update_current_prev_values()
+        message = ""
         if self._crossover("rsi_k", "rsi_d"):
-            cross = "OVER"
+            message = "Bullish\nStoch RSI Crossover"
         if self._crossunder("rsi_k", "rsi_d"):
-            cross = "UNDER"
-        return cross
+            message = "Bearish\nStoch RSI Crossunder"
+        return message
+
+    def _bullish_engulfing(self):
+        return all([
+            self.prev["close"] < self.prev["open"],  # previous red
+            self.current["close"] > self.current["open"],  # current green
+            self.current["close"] > self.prev["open"]
+        ])
+
+    def _bearish_engulfing(self):
+        return all([
+            self.prev["close"] > self.prev["open"],  # previous green
+            self.current["close"] < self.current["open"],  # current red
+            self.current["close"] < self.prev["open"]
+        ])
+
+    def _three_prev_greens(self):
+        df = self.df
+        return([
+            df.iloc[-2]["close"] > df.iloc[-2]["open"],
+            df.iloc[-3]["close"] > df.iloc[-3]["open"],
+            df.iloc[-4]["close"] > df.iloc[-4]["open"]
+        ])
+
+    def _three_prev_reds(self):
+        df = self.df
+        return([
+            df.iloc[-2]["close"] < df.iloc[-2]["open"],
+            df.iloc[-3]["close"] < df.iloc[-3]["open"],
+            df.iloc[-4]["close"] < df.iloc[-4]["open"]
+        ])
+
+    def check_engulfing_pattern(self):
+        self._get_ema()
+        self._update_current_prev_values()
+        ema = self.current["medium_ema"]
+        message = ""
+        if self.current["close"] > ema and self._bullish_engulfing():
+            message = "Bullish\nEngulfing Candle"
+        if self.current["close"] < ema and self._bearish_engulfing():
+            message = "Bearish\nEngulfing Candle"
+        return message
+
+    def check_three_line_strike(self):
+        message = ""
+        if self._three_prev_reds() and self._bullish_engulfing():
+            message = "Bullish\n3L Strike"
+        if self._three_prev_greens() and self._bearish_engulfing():
+            message = "Bearish\n3L Strike"
+        return message
