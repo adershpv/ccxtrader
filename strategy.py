@@ -70,10 +70,10 @@ class Strategy:
         # self._get_par_sar()
         # self._get_trend_sma()
         # self._get_macd()
-        # self._get_stoch_rsi()
-        self._get_atr()
+        self._get_stoch_rsi()
+        # self._get_atr()
         # self._get_vwap()
-        self._get_ema()
+        # self._get_ema()
         self.current = self.df.iloc[-1]
         self.prev = self.df.iloc[-2]
 
@@ -87,10 +87,10 @@ class Strategy:
             f"{SLOW_EMA_PERIOD}\t {self.current['slow_ema']}\t{self.prev['slow_ema']}")
 
     def _crossover(self, key1, key2):
-        return self.current[key1] > self.current[key2] and self.prev[key1] <= self.prev[key2]
+        return self.current[key1] >= self.current[key2] and self.prev[key1] < self.prev[key2]
 
     def _crossunder(self, key1, key2):
-        return self.current[key1] < self.current[key2] and self.prev[key1] >= self.prev[key2]
+        return self.current[key1] <= self.current[key2] and self.prev[key1] > self.prev[key2]
 
     def _get_trading_action(self):
         action = HOLD
@@ -145,3 +145,12 @@ class Strategy:
         else:
             p = tp = sl = ''
         return action, p, tp, sl
+
+    def check_stoch_rsi_cross(self):
+        self._get_indicator_values()
+        cross = ""
+        if self._crossover("rsi_k", "rsi_d"):
+            cross = "OVER"
+        if self._crossunder("rsi_k", "rsi_d"):
+            cross = "UNDER"
+        return cross

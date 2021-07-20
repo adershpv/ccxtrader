@@ -25,19 +25,24 @@ df = pd.DataFrame(bars[:-1], columns=COLUMNS)
 
 strategy = Strategy(df)
 
-side, p, tp, sl = strategy.analyse()
-print(side, p, tp, sl)
+# side, p, tp, sl = strategy.analyse()
+# print(side, p, tp, sl)
+
+# def notify_action_details(side, tp, sl):
+#     message = 'Buy (LONG)' if side == SIDE_BUY else 'Sell (SHORT)'
+#     if ENABLE_TAKE_PROFIT:
+#         message += f"\nTake Profit: {tp}"
+#     if ENABLE_STOP_LOSS:
+#         message += f"\nStop Loss: {sl}"
+#     send_message(message)
 
 
-def notify_action_details(side, tp, sl):
-    message = 'Buy (LONG)' if side == SIDE_BUY else 'Sell (SHORT)'
-    if ENABLE_TAKE_PROFIT:
-        message += f"\nTake Profit: {tp}"
-    if ENABLE_STOP_LOSS:
-        message += f"\nStop Loss: {sl}"
+# if side != HOLD:
+# trade(exchange, side, p, tp, sl)
+# notify_action_details(side, tp, sl)
+
+cross = strategy.check_stoch_rsi_cross()
+if cross:
+    message = f"Stoch RSI cross {cross}"
+    print(message)
     send_message(message)
-
-
-if side != HOLD:
-    # trade(exchange, side, p, tp, sl)
-    notify_action_details(side, tp, sl)
