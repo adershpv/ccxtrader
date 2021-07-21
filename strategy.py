@@ -1,13 +1,6 @@
-from ta.momentum import StochRSIIndicator, rsi
-from ta.trend import ema_indicator, sma_indicator, macd, macd_signal, macd_diff, PSARIndicator
-from ta.volatility import average_true_range
-from ta.volume import volume_weighted_average_price
-
 from constants import *
-
-
-def rounded(num, decimal_places=CALCULATION_DECIMAL_PLACES):
-    return round(num, decimal_places)
+from utils import *
+from indicators import *
 
 
 class Strategy:
@@ -15,65 +8,8 @@ class Strategy:
         self.df = df
         self.current = df.iloc[-1]
         self.prev = df.iloc[-2]
-        self.close_price = self.current[CLOSE_INDEX]
-        self.lastRows = self.df.tail(LAST_N_ROWS)
-        self.maxValueIndex = self.lastRows.idxmax()
-        self.minValueIndex = self.lastRows.idxmin()
+        self.close_price = self.current['close']
         print(f"Close Price\t{self.close_price}")
-
-    def _get_rsi(self):
-        self.df["rsi"] = rounded(rsi(self.df["close"], 14))
-
-    def _get_stoch_rsi(self):
-        rsi = StochRSIIndicator(self.df["close"], 14, 3, 3)
-        self.df["rsi_k"] = rounded(rsi.stochrsi_k() * 100)
-        self.df["rsi_d"] = rounded(rsi.stochrsi_d() * 100)
-
-    def _get_ema(self):
-        self.df["fast_ema"] = rounded(ema_indicator(
-            self.df['close'], FAST_EMA_PERIOD))
-        self.df["medium_ema"] = rounded(ema_indicator(
-            self.df['close'], MEDIUM_EMA_PERIOD))
-        # self.df["slow_ema"] = rounded(ema_indicator(
-        #     self.df['close'], SLOW_EMA_PERIOD))
-
-    def _get_trend_sma(self):
-        self.df["trend_sma"] = rounded(sma_indicator(
-            self.df['close'], TREND_SMA_PERIOD))
-
-    def _get_par_sar(self):
-        psari = PSARIndicator(
-            self.df['high'], self.df['low'], self.df['close'])
-        self.df["par_sar"] = psari.psar()
-
-    def _get_macd(self):
-        self.df["macd_line"] = macd(self.df['close'])
-        self.df["signal_line"] = macd_signal(self.df['close'])
-        self.df["macd_diff"] = macd_diff(self.df['close'])
-
-    def _get_atr(self):
-        self.df["atr"] = rounded(average_true_range(
-            self.df['high'],
-            self.df['low'],
-            self.df['close']))
-
-    def _get_vwap(self):
-        self.df["vwap"] = volume_weighted_average_price(
-            self.df['high'],
-            self.df['low'],
-            self.df['close'],
-            self.df['volume']
-        )
-
-    def _get_indicator_values(self):
-        # self._get_rsi()
-        # self._get_par_sar()
-        # self._get_trend_sma()
-        # self._get_macd()
-        self._get_stoch_rsi()
-        # self._get_atr()
-        # self._get_vwap()
-        # self._get_ema()
 
     def _update_current_prev_values(self):
         self.current = self.df.iloc[-1]
@@ -88,121 +24,67 @@ class Strategy:
         print(
             f"{SLOW_EMA_PERIOD}\t {self.current['slow_ema']}\t{self.prev['slow_ema']}")
 
-    def _crossover(self, key1, key2):
-        return self.current[key1] >= self.current[key2] and self.prev[key1] < self.prev[key2]
-
-    def _crossunder(self, key1, key2):
-        return self.current[key1] <= self.current[key2] and self.prev[key1] > self.prev[key2]
-
     def _get_trading_action(self):
         action = HOLD
         if STRATEGY == STOCH_RSI_STRATEGY:
+            self.df = get_rsi(self.df)
+            self.df = get_stoch_rsi(self.df)
+            self.df = get_ema(self.df)
+            self._update_current_prev_values()
+
             print(f'EMA {SLOW_EMA_PERIOD}\t\t{self.current["slow_ema"]}')
             print(f'RSI\t\t{self.current["rsi"]}')
             print(
                 f'Stoch RSI\t{self.current["rsi_k"]}\t{self.current["rsi_d"]}')
-            if self._crossover("rsi_k", "rsi_d"):
+            if crossover(self.df, "rsi_k", "rsi_d"):
                 if self.close_price > self.current["slow_ema"] and self.current["rsi"] > MIN_RSI and self.current["rsi_d"] < MIN_STOCH_RSI:
                     action = SIDE_BUY
                 elif self.current["rsi_d"] < MIN_STOCH_RSI_CLOSE:
                     action = CLOSE_SHORT
-            if self._crossunder("rsi_k", "rsi_d"):
+            if crossunder(self.df, "rsi_k", "rsi_d"):
                 if self.close_price < self.current["slow_ema"] and self.current["rsi"] < MAX_RSI and self.current["rsi_d"] > MAX_STOCH_RSI:
                     action = SIDE_SELL
                 elif self.current["rsi_d"] > MAX_STOCH_RSI_CLOSE:
                     action = CLOSE_LONG
         return action
 
-    def _get_stop_loss_margin(self):
-        return MAX_TAKE_PROFIT_MARGIN * self.current["atr"], MAX_STOP_LOSS_MARGIN * self.current["atr"]
+    def apply(self):
+        self.df = get_atr(self.df)
+        self._update_current_prev_values()
 
-    def _get_stop_limits(self, side):
-        price = self.close_price
-        tp_diff, sl_diff = self._get_stop_loss_margin()
-        if side == SIDE_BUY:
-            tp = price + tp_diff
-            sl = price - sl_diff
-        else:
-            tp = price - tp_diff
-            sl = price + sl_diff
-        return price, rounded(tp, PRICE_DECIMAL_PLACES), rounded(sl, PRICE_DECIMAL_PLACES)
-
-    def _check_price_ema_cross(self):
-        action = HOLD
-        ema = self.current["fast_ema"]
-        open = self.current["open"]
-        close = self.current["close"]
-        if open <= ema and close > ema:
-            action = SIDE_BUY
-        if open >= ema and close < ema:
-            action = SIDE_SELL
-        return action
-
-    def analyse(self):
-        self._get_indicator_values()
-        action = self._check_price_ema_cross()
-        # action = self._get_trading_action()
+        action = self._get_trading_action()
         if action == SIDE_BUY or action == SIDE_SELL:
-            p, tp, sl = self._get_stop_limits(action)
+            p, tp, sl = get_stop_limits(
+                self.close_price, self.current["atr"], action)
         else:
             p = tp = sl = ''
         return action, p, tp, sl
 
     def check_stoch_rsi_cross(self):
-        self._get_stoch_rsi()
+        self.df = get_stoch_rsi(self.df)
         self._update_current_prev_values()
         message = ""
-        if self._crossover("rsi_k", "rsi_d"):
+        if crossover(self.df, "rsi_k", "rsi_d"):
             message = "Bullish\nStoch RSI Crossover"
-        if self._crossunder("rsi_k", "rsi_d"):
+        if crossunder(self.df, "rsi_k", "rsi_d"):
             message = "Bearish\nStoch RSI Crossunder"
         return message
 
-    def _bullish_engulfing(self):
-        return all([
-            self.prev["close"] < self.prev["open"],  # previous red
-            self.current["close"] > self.current["open"],  # current green
-            self.current["close"] > self.prev["open"]
-        ])
-
-    def _bearish_engulfing(self):
-        return all([
-            self.prev["close"] > self.prev["open"],  # previous green
-            self.current["close"] < self.current["open"],  # current red
-            self.current["close"] < self.prev["open"]
-        ])
-
-    def _three_prev_greens(self):
-        df = self.df
-        return all([
-            df.iloc[-2]["close"] > df.iloc[-2]["open"],
-            df.iloc[-3]["close"] > df.iloc[-3]["open"],
-            df.iloc[-4]["close"] > df.iloc[-4]["open"]
-        ])
-
-    def _three_prev_reds(self):
-        df = self.df
-        return all([
-            df.iloc[-2]["close"] < df.iloc[-2]["open"],
-            df.iloc[-3]["close"] < df.iloc[-3]["open"],
-            df.iloc[-4]["close"] < df.iloc[-4]["open"]
-        ])
-
     def check_engulfing_pattern(self):
-        self._get_ema()
+        self.df = get_ema(self.df)
         self._update_current_prev_values()
         ema = self.current["medium_ema"]
         message = ""
-        if self.current["close"] > ema and self._bullish_engulfing():
+        if self.current["close"] > ema and red_candle(self.df.iloc[-2]) and bullish_engulfing(self.df):
             message = "Bullish\nEngulfing Candle"
-        if self.current["close"] < ema and self._bearish_engulfing():
+        if self.current["close"] < ema and green_candle(self.df.iloc[-2]) and bearish_engulfing(self.df):
             message = "Bearish\nEngulfing Candle"
         return message
 
     def check_three_line_strike(self):
         message = ""
-        if self._three_prev_reds() and self._bullish_engulfing():
+        if bullish_3L_strike(self.df):
             message = "Bullish\n3L Strike"
-        if self._three_prev_greens() and self._bearish_engulfing():
+        if bearish_3L_strike(self.df):
             message = "Bearish\n3L Strike"
         return message
