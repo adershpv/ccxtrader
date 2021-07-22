@@ -49,6 +49,8 @@ def notify_message(message):
         send_message(message)
 
 
-notify_message(strategy.check_stoch_rsi_cross())
-notify_message(strategy.check_engulfing_pattern())
-notify_message(strategy.check_three_line_strike())
+message = strategy.check_stoch_rsi_cross()
+message += strategy.check_engulfing_pattern()
+message += strategy.check_three_line_strike()
+
+notify_message(message)
