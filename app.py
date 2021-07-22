@@ -43,14 +43,15 @@ def auto_trade():
         notify_action_details(side, tp, sl)
 
 
-def notify_message(message):
+def notify_message(m):
+    message = "\n".join([x for x in m if x])
     if message:
         print(message)
         send_message(message)
 
 
-message = strategy.check_stoch_rsi_cross()
-message += strategy.check_engulfing_pattern()
-message += strategy.check_three_line_strike()
+rsi_cross = strategy.check_stoch_rsi_cross()
+engulfing = strategy.check_engulfing_pattern()
+three_line = strategy.check_three_line_strike()
 
-notify_message(message)
+notify_message([rsi_cross, engulfing, three_line])
