@@ -11,6 +11,8 @@ from strategy import Strategy
 from trader import trade
 from chatbot import send_message
 
+time.sleep(5)
+
 action = NOTIFY_MESSAGE
 
 try:
