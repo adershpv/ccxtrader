@@ -10,7 +10,7 @@ class Strategy:
         self.current = df.iloc[-1]
         self.prev = df.iloc[-2]
         self.close_price = self.current['close']
-        print(f"Close Price - {timeframe}\t{self.close_price}")
+        print(f"Close Price\t{self.close_price}")
 
     def _update_current_prev_values(self):
         self.current = self.df.iloc[-1]
