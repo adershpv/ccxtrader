@@ -66,12 +66,25 @@ class Strategy:
         self._update_current_prev_values()
         side = ""
         message = ""
-        if stoch_rsi_oversold(self.df) and crossover(self.df, "rsi_k", "rsi_d"):
+        if crossover(self.df, "rsi_k", "rsi_d"):
             side = SIDE_BUY
-            message = f"{self.timeframe} - Stoch RSI Oversold/Crossover"
-        if stoch_rsi_overbought(self.df) and crossunder(self.df, "rsi_k", "rsi_d"):
+            message = f"{self.timeframe} - Stoch RSI Crossover"
+        if crossunder(self.df, "rsi_k", "rsi_d"):
             side = SIDE_SELL
-            message = f"{self.timeframe} - Stoch RSI Overbought/Crossunder"
+            message = f"{self.timeframe} - Stoch RSI Crossunder"
+        return side, message
+
+    def check_stoch_rsi_extreme(self):
+        self.df = get_stoch_rsi(self.df)
+        self._update_current_prev_values()
+        side = ""
+        message = ""
+        if stoch_rsi_oversold(self.df):
+            side = SIDE_BUY
+            message = f"{self.timeframe} - Stoch RSI Oversold"
+        if stoch_rsi_overbought(self.df):
+            side = SIDE_SELL
+            message = f"{self.timeframe} - Stoch RSI Overbought"
         return side, message
 
     def check_engulfing_pattern(self):

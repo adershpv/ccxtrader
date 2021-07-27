@@ -62,13 +62,14 @@ def notify_message(m):
 
 if action == NOTIFY_MESSAGE:
     strategy = get_strategy(TIME_FRAME)
-    side, message = strategy.check_stoch_rsi_cross()
+    side, message = strategy.check_stoch_rsi_extreme()
 
     htf_strategy = get_strategy(HIGHER_TIME_FRAME)
-    htf_side, htf_message = htf_strategy.check_stoch_rsi_cross()
+    htf_side1, htf_message1 = htf_strategy.check_stoch_rsi_extreme()
+    htf_side2, htf_message2 = htf_strategy.check_stoch_rsi_cross()
 
-    if side == htf_side:
-        notify_message([side, message, htf_message])
+    if side == htf_side1 and htf_side1 == htf_side2:
+        notify_message([side, SYMBOL, message, htf_message1, htf_message2])
 
 elif action == UPDATE_STOP_LOSS:
     print(UPDATE_STOP_LOSS)
