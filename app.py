@@ -3,12 +3,21 @@
 import ccxt
 import time
 import pandas as pd
+import sys
 
 from config import *
 from constants import *
 from strategy import Strategy
 from trader import trade
 from chatbot import send_message
+
+action = NOTIFY_MESSAGE
+
+try:
+    action = sys.argv[1]
+except IndexError:
+    pass
+
 
 print("="*80, "\n")
 print(SYMBOL, time.ctime())
@@ -19,14 +28,15 @@ exchange = ccxt.binanceusdm({
 })
 
 
-bars = exchange.fetch_ohlcv(
-    SYMBOL, timeframe=TIME_FRAME, limit=CANDLESTICK_LIMIT)
-df = pd.DataFrame(bars[:-1], columns=COLUMNS)
-
-strategy = Strategy(df)
+def get_strategy(timeframe):
+    bars = exchange.fetch_ohlcv(
+        SYMBOL, timeframe=timeframe, limit=CANDLESTICK_LIMIT)
+    df = pd.DataFrame(bars[:-1], columns=COLUMNS)
+    return Strategy(df, timeframe)
 
 
 def auto_trade():
+    strategy = get_strategy(TIME_FRAME)
     side, p, tp, sl = strategy.apply()
     print(side, p, tp, sl)
 
@@ -50,8 +60,18 @@ def notify_message(m):
         send_message(message)
 
 
-rsi_cross = strategy.check_stoch_rsi_cross()
-engulfing = strategy.check_engulfing_pattern()
-three_line = strategy.check_three_line_strike()
+if action == NOTIFY_MESSAGE:
+    strategy = get_strategy(TIME_FRAME)
+    side, message = strategy.check_stoch_rsi_cross()
 
-notify_message([rsi_cross, engulfing, three_line])
+    htf_strategy = get_strategy(HIGHER_TIME_FRAME)
+    htf_side, htf_message = htf_strategy.check_stoch_rsi_cross()
+
+    if side == htf_side:
+        notify_message([side, message, htf_message])
+
+elif action == UPDATE_STOP_LOSS:
+    print(UPDATE_STOP_LOSS)
+
+elif action == TRADE:
+    auto_trade()

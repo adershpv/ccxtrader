@@ -53,7 +53,15 @@ def crossunder(df, key1, key2):
     return df.iloc[-1][key1] <= df.iloc[-1][key2] and df.iloc[-2][key1] > df.iloc[-2][key2]
 
 
+def stoch_rsi_oversold(df):
+    return df.iloc[-1]['rsi_k'] < 20 or df.iloc[-1]['rsi_d'] < 20
+
+
+def stoch_rsi_overbought(df):
+    return df.iloc[-1]['rsi_k'] > 80 or df.iloc[-1]['rsi_d'] > 80
+
 # Calculations
+
 
 def rounded(num, decimal_places=CALCULATION_DECIMAL_PLACES):
     return round(num, decimal_places)
