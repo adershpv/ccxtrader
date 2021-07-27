@@ -46,11 +46,11 @@ def bearish_3L_strike(df):
 # Price Actions
 
 def crossover(df, key1, key2):
-    return df.iloc[-1][key1] >= df.iloc[-1][key2] and df.iloc[-2][key1] < df.iloc[-2][key2]
+    return df.iloc[-1][key1] > df.iloc[-1][key2] and df.iloc[-2][key1] <= df.iloc[-2][key2]
 
 
 def crossunder(df, key1, key2):
-    return df.iloc[-1][key1] <= df.iloc[-1][key2] and df.iloc[-2][key1] > df.iloc[-2][key2]
+    return df.iloc[-1][key1] < df.iloc[-1][key2] and df.iloc[-2][key1] >= df.iloc[-2][key2]
 
 
 def stoch_rsi_oversold(df):
