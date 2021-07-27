@@ -40,17 +40,8 @@ def auto_trade():
     side, p, tp, sl = strategy.apply()
     print(side, p, tp, sl)
 
-    def notify_action_details(side, tp, sl):
-        message = 'Buy (LONG)' if side == SIDE_BUY else 'Sell (SHORT)'
-        if ENABLE_TAKE_PROFIT:
-            message += f"\nTake Profit: {tp}"
-        if ENABLE_STOP_LOSS:
-            message += f"\nStop Loss: {sl}"
-        send_message(message)
-
     if side != HOLD:
         trade(exchange, side, p, tp, sl)
-        notify_action_details(side, tp, sl)
 
 
 def notify_message(m):
@@ -70,9 +61,6 @@ if action == NOTIFY_MESSAGE:
 
     if side and side == htf_side1 and htf_side1 == htf_side2:
         notify_message([side, SYMBOL, message, htf_message1, htf_message2])
-
-elif action == UPDATE_STOP_LOSS:
-    print(UPDATE_STOP_LOSS)
 
 elif action == TRADE:
     auto_trade()
