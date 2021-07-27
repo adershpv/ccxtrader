@@ -39,12 +39,12 @@ class Strategy:
                 f'Stoch RSI\t{self.current["rsi_k"]}\t{self.current["rsi_d"]}')
             if crossover(self.df, "rsi_k", "rsi_d"):
                 if self.close_price > self.current["slow_ema"] and self.current["rsi"] > MIN_RSI and self.current["rsi_d"] < MIN_STOCH_RSI:
-                    action = SIDE_BUY
+                    action = SIDE_BUY if ENABLE_AUTO_TRADE else CLOSE_SHORT
                 elif self.current["rsi_d"] < MIN_STOCH_RSI_CLOSE:
                     action = CLOSE_SHORT
             if crossunder(self.df, "rsi_k", "rsi_d"):
                 if self.close_price < self.current["slow_ema"] and self.current["rsi"] < MAX_RSI and self.current["rsi_d"] > MAX_STOCH_RSI:
-                    action = SIDE_SELL
+                    action = SIDE_SELL if ENABLE_AUTO_TRADE else CLOSE_LONG
                 elif self.current["rsi_d"] > MAX_STOCH_RSI_CLOSE:
                     action = CLOSE_LONG
         return action
