@@ -66,10 +66,10 @@ class Strategy:
         self._update_current_prev_values()
         side = ""
         message = ""
-        if stoch_rsi_oversold(self.df) or crossover(self.df, "rsi_k", "rsi_d"):
+        if stoch_rsi_oversold(self.df) and crossover(self.df, "rsi_k", "rsi_d"):
             side = SIDE_BUY
             message = f"{self.timeframe} - Stoch RSI Oversold/Crossover"
-        if stoch_rsi_overbought(self.df) or crossunder(self.df, "rsi_k", "rsi_d"):
+        if stoch_rsi_overbought(self.df) and crossunder(self.df, "rsi_k", "rsi_d"):
             side = SIDE_SELL
             message = f"{self.timeframe} - Stoch RSI Overbought/Crossunder"
         return side, message
