@@ -36,7 +36,7 @@ def get_strategy(timeframe):
 
 
 def auto_trade():
-    strategy = get_strategy(HIGHER_TIME_FRAME)
+    strategy = get_strategy(TIME_FRAME)
     side, p, tp, sl = strategy.apply()
     print(side, p, tp, sl)
 
