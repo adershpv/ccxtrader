@@ -33,17 +33,17 @@ class Strategy:
             self.df = get_ema(self.df)
             self._update_current_prev_values()
 
-            print(f'EMA {SLOW_EMA_PERIOD}\t\t{self.current["slow_ema"]}')
+            print(f'EMA {MEDIUM_EMA_PERIOD}\t\t{self.current["medium_ema"]}')
             print(f'RSI\t\t{self.current["rsi"]}')
             print(
                 f'Stoch RSI\t{self.current["rsi_k"]}\t{self.current["rsi_d"]}')
             if crossover(self.df, "rsi_k", "rsi_d"):
-                if self.close_price > self.current["slow_ema"] and self.current["rsi"] > MIN_RSI and self.current["rsi_d"] < MIN_STOCH_RSI:
+                if self.close_price > self.current["medium_ema"] and self.current["rsi"] > MIN_RSI and self.current["rsi_d"] < MIN_STOCH_RSI:
                     action = SIDE_BUY if ENABLE_AUTO_TRADE else CLOSE_SHORT
                 elif self.current["rsi_d"] < MIN_STOCH_RSI_CLOSE:
                     action = CLOSE_SHORT
             if crossunder(self.df, "rsi_k", "rsi_d"):
-                if self.close_price < self.current["slow_ema"] and self.current["rsi"] < MAX_RSI and self.current["rsi_d"] > MAX_STOCH_RSI:
+                if self.close_price < self.current["medium_ema"] and self.current["rsi"] < MAX_RSI and self.current["rsi_d"] > MAX_STOCH_RSI:
                     action = SIDE_SELL if ENABLE_AUTO_TRADE else CLOSE_LONG
                 elif self.current["rsi_d"] > MAX_STOCH_RSI_CLOSE:
                     action = CLOSE_LONG
