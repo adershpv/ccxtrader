@@ -68,7 +68,7 @@ if action == NOTIFY_MESSAGE:
     htf_side1, htf_message1 = htf_strategy.check_stoch_rsi_extreme()
     htf_side2, htf_message2 = htf_strategy.check_stoch_rsi_cross()
 
-    if side == htf_side1 and htf_side1 == htf_side2:
+    if side and side == htf_side1 and htf_side1 == htf_side2:
         notify_message([side, SYMBOL, message, htf_message1, htf_message2])
 
 elif action == UPDATE_STOP_LOSS:
