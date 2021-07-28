@@ -104,6 +104,7 @@ def trade(exchange, side, p, tp, sl):
             except Exception as e:
                 print(e, "\n")
                 send_message(f"Unable to update stop limits.\n{e}")
+                close(exchange, posAmt)
         else:
             buy(exchange, posAmt, p, tp, sl)
 
@@ -119,6 +120,7 @@ def trade(exchange, side, p, tp, sl):
             except Exception as e:
                 print(e, "\n")
                 send_message(f"Unable to update stop limits.\n{e}")
+                close(exchange, posAmt)
         else:
             sell(exchange, posAmt, p, tp, sl)
 
