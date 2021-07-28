@@ -39,11 +39,11 @@ def get_strategy(timeframe):
 
 def auto_trade():
     strategy = get_strategy(TIME_FRAME)
-    side, p, tp, sl = strategy.apply()
-    print(side, p, tp, sl)
+    side, p, tp, sl, lc = strategy.apply()
+    print(side, p, tp, sl, lc)
 
     if side != HOLD:
-        trade(exchange, side, p, tp, sl)
+        trade(exchange, side, p, tp, sl, lc)
 
 
 def notify_message(m):

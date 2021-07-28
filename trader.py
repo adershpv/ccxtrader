@@ -88,7 +88,7 @@ def close(exchange, posAmt):
         exchange.create_market_buy_order(SYMBOL, abs(posAmt))
 
 
-def trade(exchange, side, p, tp, sl):
+def trade(exchange, side, p, tp, sl, lc):
     pos = exchange.fetch_positions(SYMBOL)
     posAmt = float(pos[0]["info"]["positionAmt"])
 
@@ -137,10 +137,11 @@ def trade(exchange, side, p, tp, sl):
 
     elif posAmt != 0 and side == HOLD and ENABLE_TRAILING_STOP_LOSS:
         try:
-            exchange.cancel_all_orders(SYMBOL)
-            if posAmt > 0:
+            if posAmt > 0 and lc == BEARISH:
+                exchange.cancel_all_orders(SYMBOL)
                 set_stop_limits(exchange, posAmt, SIDE_SELL, "", sl)
-            else:
+            elif posAmt < 0 and lc == BULLISH:
+                exchange.cancel_all_orders(SYMBOL)
                 # In this case "tp" is actually stop loss
                 set_stop_limits(exchange, abs(posAmt), SIDE_BUY, "", tp)
             print(

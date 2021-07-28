@@ -53,6 +53,7 @@ class Strategy:
         self.df = get_atr(self.df)
         self._update_current_prev_values()
 
+        lc = BULLISH if self.current["close"] > self.current["open"] else BEARISH
         action = self._get_trading_action()
         if action == SIDE_BUY or action == SIDE_SELL:
             p, tp, sl = get_stop_limits(
@@ -61,7 +62,7 @@ class Strategy:
             p = self.close_price
             tp = get_swing_high_sl(self.df)
             sl = get_swing_low_sl(self.df)
-        return action, p, tp, sl
+        return action, p, tp, sl, lc
 
     def check_stoch_rsi_cross(self):
         self.df = get_stoch_rsi(self.df)
