@@ -140,12 +140,12 @@ def trade(exchange, side, p, tp, sl, lc):
             if posAmt > 0 and lc == BEARISH:
                 exchange.cancel_all_orders(SYMBOL)
                 set_stop_limits(exchange, posAmt, SIDE_SELL, "", sl)
+                print(f"{SYMBOL} Updated Stop Loss: {sl}")
             elif posAmt < 0 and lc == BULLISH:
                 exchange.cancel_all_orders(SYMBOL)
                 # In this case "tp" is actually stop loss
                 set_stop_limits(exchange, abs(posAmt), SIDE_BUY, "", tp)
-            print(
-                f"{SYMBOL} Updated Stop Limits (SHORT)\nTake Profit: {tp}\nStop Loss: {sl}")
+                print(f"{SYMBOL} Updated Stop Loss: {tp}")
         except Exception as e:
             print(e, "\n")
             send_message(f"Unable to update stop limits.\n{e}")
