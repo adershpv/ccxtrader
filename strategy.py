@@ -27,7 +27,7 @@ class Strategy:
 
     def _get_trading_action(self):
         action = HOLD
-        if STRATEGY == STOCH_RSI_STRATEGY:
+        if STOCH_RSI_STRATEGY in STRATEGY:
             self.df = get_rsi(self.df)
             self.df = get_stoch_rsi(self.df)
             self.df = get_ema(self.df)
@@ -38,15 +38,26 @@ class Strategy:
             print(
                 f'Stoch RSI\t{self.current["rsi_k"]}\t{self.current["rsi_d"]}')
             if crossover(self.df, "rsi_k", "rsi_d"):
+                print("Stoch RSI crossover")
                 if self.close_price > self.current["medium_ema"] and self.current["rsi"] > MIN_RSI and self.current["rsi_d"] < MIN_STOCH_RSI:
                     action = SIDE_BUY if ENABLE_AUTO_TRADE else CLOSE_SHORT
                 elif self.current["rsi_d"] < MIN_STOCH_RSI_CLOSE:
                     action = CLOSE_SHORT
             if crossunder(self.df, "rsi_k", "rsi_d"):
+                print("Stoch RSI crossunder")
                 if self.close_price < self.current["medium_ema"] and self.current["rsi"] < MAX_RSI and self.current["rsi_d"] > MAX_STOCH_RSI:
                     action = SIDE_SELL if ENABLE_AUTO_TRADE else CLOSE_LONG
                 elif self.current["rsi_d"] > MAX_STOCH_RSI_CLOSE:
                     action = CLOSE_LONG
+
+        if THREE_LINE_STRIKE in STRATEGY:
+            if bullish_3L_strike(self.df) and self.current["rsi_k"] > self.current["rsi_d"]:
+                print("Bullish 3 line strike")
+                action = SIDE_BUY
+            if bearish_3L_strike(self.df) and self.current["rsi_k"] < self.current["rsi_d"]:
+                print("Bearish 3 line strike")
+                action = SIDE_SELL
+
         return action
 
     def apply(self):
