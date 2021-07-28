@@ -41,9 +41,7 @@ def auto_trade():
     strategy = get_strategy(TIME_FRAME)
     side, p, tp, sl, lc = strategy.apply()
     print(side, p, tp, sl, lc)
-
-    if side != HOLD:
-        trade(exchange, side, p, tp, sl, lc)
+    trade(exchange, side, p, tp, sl, lc)
 
 
 def notify_message(m):
