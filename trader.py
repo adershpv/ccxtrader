@@ -37,6 +37,13 @@ def notify_order_details(side, balance, amount, p, tp, sl):
     send_message(message)
 
 
+def cancel_stop_loss_order(exchange):
+    o = exchange.fetch_open_orders(symbol=SYMBOL)
+    slo = next((x for x in o if x['info']['type'] == STOP_MARKET), None)
+    if slo and slo["id"]:
+        exchange.cancel_order(slo["id"], SYMBOL)
+
+
 def set_stop_limits(exchange, amount, side, tp, sl):
     if ENABLE_TAKE_PROFIT and tp:
         params["stopPrice"] = tp
@@ -138,11 +145,11 @@ def trade(exchange, side, p, tp, sl, lc):
     elif posAmt != 0 and side == HOLD and ENABLE_TRAILING_STOP_LOSS:
         try:
             if posAmt > 0 and lc == BEARISH:
-                exchange.cancel_all_orders(SYMBOL)
+                cancel_stop_loss_order(exchange)
                 set_stop_limits(exchange, posAmt, SIDE_SELL, "", sl)
                 print(f"{SYMBOL} Updated Stop Loss: {sl}")
             elif posAmt < 0 and lc == BULLISH:
-                exchange.cancel_all_orders(SYMBOL)
+                cancel_stop_loss_order(exchange)
                 # In this case "tp" is actually stop loss
                 set_stop_limits(exchange, abs(posAmt), SIDE_BUY, "", tp)
                 print(f"{SYMBOL} Updated Stop Loss: {tp}")
