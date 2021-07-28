@@ -56,9 +56,11 @@ class Strategy:
         action = self._get_trading_action()
         if action == SIDE_BUY or action == SIDE_SELL:
             p, tp, sl = get_stop_limits(
-                self.close_price, self.current["atr"], action)
+                self.df, self.close_price, self.current["atr"], action)
         else:
-            p = tp = sl = ''
+            p = self.close_price
+            tp = get_swing_high_sl(self.df)
+            sl = get_swing_low_sl(self.df)
         return action, p, tp, sl
 
     def check_stoch_rsi_cross(self):

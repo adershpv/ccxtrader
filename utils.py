@@ -71,12 +71,26 @@ def get_stop_loss_margin(atr):
     return MAX_TAKE_PROFIT_MARGIN * atr, MAX_STOP_LOSS_MARGIN * atr
 
 
-def get_stop_limits(price, atr, side):
+def get_swing_low_sl(df):
+    c = df[df["close"] < df["open"]]
+    sl = min(c.iloc[-1]["low"], c.iloc[-2]["low"]) - SWING_STOP_LOSS_MARGIN
+    return rounded(sl, PRICE_DECIMAL_PLACES)
+
+
+def get_swing_high_sl(df):
+    c = df[df["close"] > df["open"]]
+    sl = max(c.iloc[-1]["high"], c.iloc[-2]["high"]) + SWING_STOP_LOSS_MARGIN
+    return rounded(sl, PRICE_DECIMAL_PLACES)
+
+
+def get_stop_limits(df, price, atr, side):
     tp_diff, sl_diff = get_stop_loss_margin(atr)
     if side == SIDE_BUY:
         tp = price + tp_diff
-        sl = price - sl_diff
+        sl = get_swing_low_sl(
+            df) if ENABLE_SWING_STOP_LOSS else price - sl_diff
     else:
         tp = price - tp_diff
-        sl = price + sl_diff
+        sl = get_swing_high_sl(
+            df) if ENABLE_SWING_STOP_LOSS else price + sl_diff
     return price, rounded(tp, PRICE_DECIMAL_PLACES), rounded(sl, PRICE_DECIMAL_PLACES)

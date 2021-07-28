@@ -38,11 +38,11 @@ def notify_order_details(side, balance, amount, p, tp, sl):
 
 
 def set_stop_limits(exchange, amount, side, tp, sl):
-    if ENABLE_TAKE_PROFIT:
+    if ENABLE_TAKE_PROFIT and tp:
         params["stopPrice"] = tp
         exchange.create_order(SYMBOL, TAKE_PROFIT_MARKET,
                               side, amount, params=params)
-    if ENABLE_STOP_LOSS:
+    if ENABLE_STOP_LOSS and sl:
         params["stopPrice"] = sl
         exchange.create_order(SYMBOL, STOP_MARKET, side, amount, params=params)
 
@@ -134,3 +134,18 @@ def trade(exchange, side, p, tp, sl):
         except Exception as e:
             print(e, "\n")
             send_message(f"Unable to close current position.\n{e}")
+
+    elif posAmt != 0 and side == HOLD and ENABLE_TRAILING_STOP_LOSS:
+        try:
+            exchange.cancel_all_orders(SYMBOL)
+            if posAmt > 0:
+                set_stop_limits(exchange, posAmt, SIDE_SELL, "", sl)
+            else:
+                # In this case "tp" is actually stop loss
+                set_stop_limits(exchange, abs(posAmt), SIDE_BUY, "", tp)
+            print(
+                f"{SYMBOL} Updated Stop Limits (SHORT)\nTake Profit: {tp}\nStop Loss: {sl}")
+        except Exception as e:
+            print(e, "\n")
+            send_message(f"Unable to update stop limits.\n{e}")
+            close(exchange, posAmt)
