@@ -39,13 +39,13 @@ class Strategy:
                 f'Stoch RSI\t{self.current["rsi_k"]}\t{self.current["rsi_d"]}')
             if crossover(self.df, "rsi_k", "rsi_d"):
                 print("Stoch RSI crossover")
-                if self.close_price > self.current["medium_ema"] and self.current["rsi"] > MIN_RSI and self.current["rsi_d"] < MIN_STOCH_RSI:
+                if price_above_3_emas(self.current) and self.current["rsi"] > MIN_RSI and self.current["rsi_d"] < MIN_STOCH_RSI:
                     action = SIDE_BUY if ENABLE_AUTO_TRADE else CLOSE_SHORT
                 elif self.current["rsi_d"] < MIN_STOCH_RSI_CLOSE and ENABLE_CLOSE_POSITION:
                     action = CLOSE_SHORT
             if crossunder(self.df, "rsi_k", "rsi_d"):
                 print("Stoch RSI crossunder")
-                if self.close_price < self.current["medium_ema"] and self.current["rsi"] < MAX_RSI and self.current["rsi_d"] > MAX_STOCH_RSI:
+                if price_below_3_emas(self.current) and self.current["rsi"] < MAX_RSI and self.current["rsi_d"] > MAX_STOCH_RSI:
                     action = SIDE_SELL if ENABLE_AUTO_TRADE else CLOSE_LONG
                 elif self.current["rsi_d"] > MAX_STOCH_RSI_CLOSE and ENABLE_CLOSE_POSITION:
                     action = CLOSE_LONG

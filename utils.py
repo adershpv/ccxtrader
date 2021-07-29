@@ -60,6 +60,22 @@ def stoch_rsi_oversold(df):
 def stoch_rsi_overbought(df):
     return df.iloc[-1]['rsi_k'] > 80 or df.iloc[-1]['rsi_d'] > 80
 
+
+def price_above_3_emas(c):
+    return all([
+        c['close'] > c['fast_ema'],
+        c['fast_ema'] > c['medium_ema'],
+        c['medium_ema'] > c['slow_ema']
+    ])
+
+
+def price_below_3_emas(c):
+    return all([
+        c['close'] < c['fast_ema'],
+        c['fast_ema'] < c['medium_ema'],
+        c['medium_ema'] < c['slow_ema']
+    ])
+
 # Calculations
 
 
