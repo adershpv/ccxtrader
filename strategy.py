@@ -82,10 +82,10 @@ class Strategy:
         message = ""
         if crossover(self.df, "rsi_k", "rsi_d"):
             side = SIDE_BUY
-            message = f"{self.timeframe} - Stoch RSI Crossover"
+            message = "Stoch RSI Crossover"
         if crossunder(self.df, "rsi_k", "rsi_d"):
             side = SIDE_SELL
-            message = f"{self.timeframe} - Stoch RSI Crossunder"
+            message = "Stoch RSI Crossunder"
         return side, message
 
     def check_stoch_rsi_extreme(self):
@@ -95,10 +95,10 @@ class Strategy:
         message = ""
         if stoch_rsi_oversold(self.df):
             side = SIDE_BUY
-            message = f"{self.timeframe} - Stoch RSI Oversold"
+            message = "Stoch RSI Oversold"
         if stoch_rsi_overbought(self.df):
             side = SIDE_SELL
-            message = f"{self.timeframe} - Stoch RSI Overbought"
+            message = "Stoch RSI Overbought"
         return side, message
 
     def check_engulfing_pattern(self):
@@ -109,10 +109,10 @@ class Strategy:
         message = ""
         if self.current["close"] > ema and red_candle(self.df.iloc[-2]) and bullish_engulfing(self.df):
             side = SIDE_BUY
-            message = "Bullish\nEngulfing Candle"
+            message = "Bullish Engulfing Candle"
         if self.current["close"] < ema and green_candle(self.df.iloc[-2]) and bearish_engulfing(self.df):
             side = SIDE_SELL
-            message = "Bearish\nEngulfing Candle"
+            message = "Bearish Engulfing Candle"
         return side, message
 
     def check_three_line_strike(self):
@@ -120,8 +120,40 @@ class Strategy:
         message = ""
         if bullish_3L_strike(self.df):
             side = SIDE_BUY
-            message = "Bullish\n3L Strike"
+            message = "Bullish 3L Strike"
         if bearish_3L_strike(self.df):
             side = SIDE_SELL
-            message = "Bearish\n3L Strike"
+            message = "Bearish 3L Strike"
+        return side, message
+
+    def check_macd_cross(self):
+        self.df = get_macd(self.df)
+        self._update_current_prev_values()
+        side = ""
+        message = ""
+        if crossover(self.df, "macd_line", "signal_line"):
+            side = SIDE_BUY
+            message = "MACD Crossover"
+        if crossunder(self.df, "macd_line", "signal_line"):
+            side = SIDE_SELL
+            message = "MACD Crossunder"
+        return side, message
+
+    def check_ema_cross(self):
+        self.df = get_ema(self.df)
+        self._update_current_prev_values()
+        side = ""
+        message = ""
+        if crossover(self.df, "fast_ema", "medium_ema"):
+            side = SIDE_BUY
+            message = f"EMA Crossover {FAST_EMA_PERIOD} > {MEDIUM_EMA_PERIOD}"
+        if crossunder(self.df, "fast_ema", "medium_ema"):
+            side = SIDE_SELL
+            message = f"EMA Crossunder {FAST_EMA_PERIOD} > {MEDIUM_EMA_PERIOD}"
+        if crossover(self.df, "fast_ema", "slow_ema"):
+            side = SIDE_BUY
+            message = f"EMA Crossover {FAST_EMA_PERIOD} > {SLOW_EMA_PERIOD}"
+        if crossunder(self.df, "fast_ema", "slow_ema"):
+            side = SIDE_SELL
+            message = f"EMA Crossunder {FAST_EMA_PERIOD} > {SLOW_EMA_PERIOD}"
         return side, message
