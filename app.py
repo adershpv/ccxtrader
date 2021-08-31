@@ -13,7 +13,7 @@ from chatbot import send_message
 
 time.sleep(2)
 
-action = NOTIFY
+action = TRADE
 
 try:
     action = sys.argv[1]
