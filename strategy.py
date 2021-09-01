@@ -59,19 +59,36 @@ class Strategy:
                 action = SIDE_SELL
 
         if EMA_CROSS_STRATEGY in STRATEGY:
-            self.df = get_rsi(self.df)
             self.df = get_ema(self.df)
             self._update_current_prev_values()
-            if crossover(self.df, "fast_ema", "medium_ema") and self.current["rsi"] > MIN_RSI:
+
+            if crossover(self.df, "fast_ema", "medium_ema"):
                 print("Bullish EMA crossover")
                 action = SIDE_BUY
-            elif crossunder(self.df, "fast_ema", "medium_ema") and self.current["rsi"] < MAX_RSI:
+
+            elif crossunder(self.df, "fast_ema", "medium_ema"):
                 print("Bearish EMA crossunder")
                 action = SIDE_SELL
-            elif self.close_price < self.current["medium_ema"] and ENABLE_CLOSE_POSITION:
-                action = CLOSE_LONG
-            elif self.close_price > self.current["medium_ema"] and ENABLE_CLOSE_POSITION:
-                action = CLOSE_SHORT
+
+            elif ENABLE_CLOSE_POSITION:
+                lowest_ema = min(
+                    self.current["medium_ema"], self.current["slow_ema"])
+                highest_ema = max(
+                    self.current["medium_ema"], self.current["slow_ema"])
+
+                if all([
+                        self.current["close"] < self.current["open"],
+                        self.current["close"] < highest_ema,
+                        self.current["open"] < highest_ema
+                ]):
+                    action = CLOSE_LONG
+
+                if all([
+                    self.current["close"] > self.current["open"],
+                    self.current["close"] > lowest_ema,
+                    self.current["open"] > lowest_ema
+                ]):
+                    action = CLOSE_SHORT
 
         return action
 
